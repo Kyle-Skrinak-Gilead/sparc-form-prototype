@@ -53,11 +53,22 @@
       letter-spacing: .1px;
     }
 
-    .shortdesc {
+.shortdesc {
       margin-top: 6px;
       color: var(--muted);
       font-size: 14px;
       max-width: 70ch;
+    }
+
+    .request-type-guidance {
+      margin-top: 12px;
+      color: var(--text);
+      font-size: 13px;
+      max-width: 95ch;
+    }
+
+    .request-type-guidance p {
+      margin: 0 0 10px 0;
     }
 
     .chip {
