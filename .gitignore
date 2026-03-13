@@ -1,0 +1,15 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# OneDrive temp files
+*.tmp
+~$*
+
+# Editor directories
+.vscode/
+.idea/
+
+# Node (if any tooling is added later)
+node_modules/
