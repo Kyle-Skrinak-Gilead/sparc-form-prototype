@@ -19,11 +19,22 @@ index.html        # Main form page
 assets/
   css/            # Stylesheets
   js/             # Scripts
-  images/         # Images / icons
+.github/
+  workflows/      # Pages deploy + PR previews
+  copilot-instructions.md
 ```
 
 ## Workflow
 
 1. Make changes locally
 2. Commit and push to `main`
-3. GitHub Pages auto-deploys — changes are live within ~30 seconds
+3. GitHub Actions syncs `main` content to `gh-pages`
+4. GitHub Pages serves the latest deployed content
+
+## Pull request previews
+
+Each PR publishes to:
+
+`https://kyle-skrinak-gilead.github.io/sparc-form-prototype/pr-preview/pr-<PR_NUMBER>/`
+
+The workflow comments this URL directly on the PR and removes it when the PR closes.
