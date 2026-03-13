@@ -1,16 +1,584 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SPARC — Report an Incident</title>
-  <link rel="stylesheet" href="assets/css/styles.css" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DX Website Operation Support (Prototype)</title>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --text: #1b1b1b;
+      --muted: #5e5e5e;
+      --border: #d7dbe0;
+      --focus: #2563eb;
+      --danger: #b91c1c;
+      --ok: #166534;
+      --radius: 8px;
+      --pad: 16px;
+      --gap: 14px;
+      --font: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      --mono: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 24px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      line-height: 1.35;
+    }
+
+    .container {
+      max-width: 980px;
+      margin: 0 auto;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 1px 2px rgba(0,0,0,.04);
+      overflow: hidden;
+    }
+
+    .header {
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    h1 {
+      margin: 0;
+      font-weight: 600;
+      font-size: 22px;
+      letter-spacing: .1px;
+    }
+
+    .shortdesc {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 14px;
+      max-width: 70ch;
+    }
+
+    .chip {
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 12px;
+      color: var(--muted);
+      background: #fff;
+      white-space: nowrap;
+    }
+
+    .body {
+      padding: 20px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--gap);
+    }
+
+    @media (min-width: 860px) {
+      .grid.two {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+
+    label {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .req::after {
+      content: " *";
+      color: var(--danger);
+      font-weight: 700;
+    }
+
+    input[type="text"],
+    input[type="url"],
+    input[type="date"],
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 10px;
+      font-size: 14px;
+      background: #fff;
+      color: var(--text);
+    }
+
+    textarea {
+      min-height: 90px;
+      resize: vertical;
+    }
+
+    input[readonly] {
+      background: #f3f4f6;
+      color: #374151;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--focus);
+      box-shadow: 0 0 0 3px rgba(37,99,235,.15);
+    }
+
+    .help {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .section {
+      border-top: 1px solid var(--border);
+      padding-top: 18px;
+      margin-top: 18px;
+    }
+
+    .section h2 {
+      margin: 0 0 10px 0;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .inline {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .inline label {
+      margin: 0;
+      font-weight: 600;
+    }
+
+    .checkbox {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .checkbox input {
+      width: 18px;
+      height: 18px;
+      margin: 0;
+    }
+
+    .notice {
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--focus);
+      border-radius: 6px;
+      padding: 10px 12px;
+      background: #f8fafc;
+      color: #0f172a;
+      font-size: 13px;
+    }
+
+    .notice strong { font-weight: 700; }
+
+    .hidden { display: none !important; }
+
+    .actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 14px 20px;
+      border-top: 1px solid var(--border);
+      background: #fbfbfc;
+    }
+
+    button {
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text);
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    button.primary {
+      background: var(--focus);
+      border-color: var(--focus);
+      color: #fff;
+    }
+
+    button:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(37,99,235,.2);
+    }
+
+    .errors {
+      color: var(--danger);
+      font-size: 13px;
+      margin-top: 10px;
+      font-family: var(--mono);
+      white-space: pre-wrap;
+    }
+
+    .ok {
+      color: var(--ok);
+      font-size: 13px;
+      margin-top: 10px;
+      font-family: var(--mono);
+      white-space: pre-wrap;
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 12px 0;
+    }
+  </style>
 </head>
 <body>
-  <!-- Replace the contents of this file with your ServiceNow form HTML prototype -->
-  <h1>SPARC Incident Submission Form</h1>
-  <p>Prototype placeholder — add your form markup here.</p>
+  <div class="container">
+    <div class="panel" role="region" aria-label="Item Details">
+      <div class="header">
+        <div>
+          <h1>DX Website Operation Support</h1>
+          <div class="shortdesc">
+            Use this form for operational support of DX Platform–managed public websites (break/fix, minor updates, redirects, decommission). Do not use for new website build and hosting, new site launches, migrations, rebuilds, or other demand intake.
+          </div>
+        </div>
+        <div class="chip" aria-label="Prototype">Prototype</div>
+      </div>
 
-  <script src="assets/js/main.js"></script>
+      <form id="dx-form" class="body" novalidate>
+        <div class="notice" role="note">
+          <strong>Scope:</strong> Existing DX Platform–managed public websites only. New site builds/hosting, launches, migrations, rebuilds, or major enhancements belong in demand intake.
+        </div>
+
+        <div class="section">
+          <h2>Request</h2>
+
+          <div class="grid two">
+            <div class="field">
+              <label class="req" for="requested_for">Requested for</label>
+              <input id="requested_for" name="requested_for" type="text" value="Kyle Skrinak" readonly aria-required="true" />
+              <div class="help">Prototype default. In SPARC this is a reference field.</div>
+            </div>
+
+            <div class="field">
+              <label class="req" for="website">Website</label>
+              <input id="website" name="website" type="text" placeholder="Start typing a supported website/domain" aria-required="true" required />
+              <div class="help">Prototype as free text. In SPARC this is a reference dropdown.</div>
+            </div>
+          </div>
+
+          <div class="grid two">
+            <div class="field">
+              <label class="req" for="request_type">Request Type</label>
+              <select id="request_type" name="request_type" aria-required="true" required>
+                <option value="">-- None --</option>
+                <option value="website_issue">Website issue (site is up)</option>
+                <option value="outage">Outage / site down (Incident)</option>
+                <option value="redirect">Domain redirect</option>
+                <option value="decommission">Decommission (Site Owner only)</option>
+                <option value="other">Other (DX website ops)</option>
+              </select>
+              <div class="help" id="request_type_help"></div>
+            </div>
+
+            <div class="field hidden" id="other_specify_group">
+              <label class="req" for="other_specify">Other (Please Specify)</label>
+              <input id="other_specify" name="other_specify" type="text" maxlength="4000" placeholder="Describe the request type" />
+              <div class="help">Shown only when Request Type = Other.</div>
+            </div>
+          </div>
+
+          <div class="grid" id="redirect_group" class="hidden">
+            <div class="grid two hidden" id="redirect_group_inner">
+              <div class="field">
+                <label class="req" for="source_url">Source URL</label>
+                <input id="source_url" name="source_url" type="url" placeholder="https://example.com/from" />
+                <div class="help">Required when Request Type = Domain redirect.</div>
+              </div>
+              <div class="field">
+                <label class="req" for="target_url">Target URL</label>
+                <input id="target_url" name="target_url" type="url" placeholder="https://example.com/to" />
+                <div class="help">Required when Request Type = Domain redirect.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid hidden" id="decommission_group">
+            <div class="notice" role="note">
+              <strong>Decommission:</strong> Only the business Site Owner can request decommission. This form captures an attestation and a Site Owner selection for verification.
+            </div>
+
+            <div class="grid two">
+              <div class="field">
+                <label class="req" for="site_owner">Site Owner (FTE only)</label>
+                <input id="site_owner" name="site_owner" type="text" list="fte_list" placeholder="Search/select an FTE" />
+                <datalist id="fte_list">
+                  <option value="Example Owner 1"></option>
+                  <option value="Example Owner 2"></option>
+                  <option value="Example Owner 3"></option>
+                </datalist>
+                <div class="help">Prototype uses a datalist. In SPARC this is an AD lookup constrained to FTE only.</div>
+              </div>
+
+              <div class="field">
+                <label class="req" for="confirm_site_owner">Site Owner attestation</label>
+                <div class="checkbox">
+                  <input id="confirm_site_owner" name="confirm_site_owner" type="checkbox" />
+                  <label for="confirm_site_owner" style="font-weight:600">I confirm I am the Site Owner</label>
+                </div>
+                <div class="help">Required when Request Type = Decommission.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid two">
+            <div class="field hidden" id="outage_group">
+              <label class="req" for="is_outage">Is it an Outage?</label>
+              <select id="is_outage" name="is_outage">
+                <option value="">-- None --</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+              </select>
+              <div class="help">Shown only when Request Type = Outage. Auto-sets to Yes.</div>
+            </div>
+
+            <div class="field hidden" id="priority_group">
+              <label for="priority">Priority</label>
+              <select id="priority" name="priority">
+                <option value="">-- None --</option>
+                <option value="High">High</option>
+                <option value="Low">Low</option>
+              </select>
+              <div class="help">Prototype optional. In SPARC this may be driven by Incident process.</div>
+            </div>
+          </div>
+
+          <div class="grid">
+            <div class="field">
+              <label class="req" for="description">Description</label>
+              <textarea id="description" name="description" placeholder="Describe the issue/request, impacted URL(s), steps to reproduce, and impact." aria-required="true" required></textarea>
+            </div>
+          </div>
+
+          <div class="grid two">
+            <div class="field">
+              <label for="date_change">Date of Occurrence / Expected Change</label>
+              <input id="date_change" name="date_change" type="date" />
+              <div class="help">Optional unless your SPARC implementation mandates it.</div>
+            </div>
+
+            <div class="field">
+              <label for="effective_time">Expected Change Time (optional)</label>
+              <input id="effective_time" name="effective_time" type="text" placeholder="HH:MM (local)" />
+              <div class="help">Prototype helper field; not in current extraction.</div>
+            </div>
+          </div>
+
+          <div class="grid">
+            <div class="field">
+              <label for="more_info">Additional information</label>
+              <textarea id="more_info" name="more_info" placeholder="Any other context, links, impacted audiences, or constraints."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <h2>Attachments</h2>
+          <div class="field">
+            <label for="attachments">Add attachments</label>
+            <input id="attachments" name="attachments" type="file" multiple />
+            <div class="help">Prototype only. SPARC attachment control differs.</div>
+          </div>
+        </div>
+
+        <div id="form_errors" class="errors hidden" aria-live="polite"></div>
+        <div id="form_ok" class="ok hidden" aria-live="polite"></div>
+
+        <div class="actions">
+          <button type="button" id="btn_reset">Reset</button>
+          <button type="submit" class="primary">Submit (Prototype)</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      const form = document.getElementById('dx-form');
+
+      const requestType = document.getElementById('request_type');
+      const requestTypeHelp = document.getElementById('request_type_help');
+
+      const otherGroup = document.getElementById('other_specify_group');
+      const otherField = document.getElementById('other_specify');
+
+      const redirectGroupInner = document.getElementById('redirect_group_inner');
+      const sourceUrl = document.getElementById('source_url');
+      const targetUrl = document.getElementById('target_url');
+
+      const decommissionGroup = document.getElementById('decommission_group');
+      const siteOwner = document.getElementById('site_owner');
+      const confirmSiteOwner = document.getElementById('confirm_site_owner');
+
+      const outageGroup = document.getElementById('outage_group');
+      const isOutage = document.getElementById('is_outage');
+      const priorityGroup = document.getElementById('priority_group');
+
+      const errors = document.getElementById('form_errors');
+      const ok = document.getElementById('form_ok');
+
+      const helpText = {
+        '': '',
+        'website_issue': 'Use for break/fix and minor operational updates when the site is up.',
+        'outage': 'Use only when the production site is down or unusable. This routes as an Incident.',
+        'redirect': 'Use for vanity/301 redirects. Source URL and Target URL are required.',
+        'decommission': 'Use only for retiring a site/domain. Site Owner attestation and Site Owner selection are required.',
+        'other': 'Use for DX website operations that do not fit the above. Provide a short label in Other (Please Specify).'
+      };
+
+      function show(el) { el.classList.remove('hidden'); }
+      function hide(el) { el.classList.add('hidden'); }
+
+      function setRequired(el, isReq) {
+        if (isReq) {
+          el.setAttribute('required', 'required');
+          el.setAttribute('aria-required', 'true');
+        } else {
+          el.removeAttribute('required');
+          el.setAttribute('aria-required', 'false');
+        }
+      }
+
+      function applyRules() {
+        const rt = requestType.value;
+        requestTypeHelp.textContent = helpText[rt] || '';
+
+        // Reset visibility
+        hide(otherGroup);
+        hide(redirectGroupInner);
+        hide(decommissionGroup);
+        hide(outageGroup);
+        hide(priorityGroup);
+
+        // Reset requireds
+        setRequired(otherField, false);
+        setRequired(sourceUrl, false);
+        setRequired(targetUrl, false);
+        setRequired(siteOwner, false);
+        confirmSiteOwner.required = false;
+
+        // Clear outage defaults
+        isOutage.value = '';
+
+        if (rt === 'other') {
+          show(otherGroup);
+          setRequired(otherField, true);
+        }
+
+        if (rt === 'redirect') {
+          show(redirectGroupInner);
+          setRequired(sourceUrl, true);
+          setRequired(targetUrl, true);
+        }
+
+        if (rt === 'decommission') {
+          show(decommissionGroup);
+          setRequired(siteOwner, true);
+          confirmSiteOwner.required = true;
+        }
+
+        if (rt === 'outage') {
+          show(outageGroup);
+          show(priorityGroup);
+          isOutage.value = 'Yes';
+          setRequired(isOutage, true);
+        } else {
+          setRequired(isOutage, false);
+        }
+      }
+
+      requestType.addEventListener('change', applyRules);
+
+      document.getElementById('btn_reset').addEventListener('click', () => {
+        form.reset();
+        applyRules();
+        hide(errors);
+        hide(ok);
+      });
+
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        hide(errors);
+        hide(ok);
+
+        const missing = [];
+
+        // Built-in required validation
+        const requiredFields = form.querySelectorAll('[required]');
+        requiredFields.forEach(f => {
+          const isCheckbox = f.type === 'checkbox';
+          const empty = isCheckbox ? !f.checked : !String(f.value || '').trim();
+          if (empty) {
+            const label = form.querySelector(`label[for="${f.id}"]`);
+            missing.push(label ? label.textContent.replace('*','').trim() : f.name);
+          }
+        });
+
+        // If redirect, basic URL sanity (prototype-level)
+        if (requestType.value === 'redirect') {
+          const su = String(sourceUrl.value || '').trim();
+          const tu = String(targetUrl.value || '').trim();
+          if (su && !/^https?:\/\//i.test(su)) missing.push('Source URL (must start with http:// or https://)');
+          if (tu && !/^https?:\/\//i.test(tu)) missing.push('Target URL (must start with http:// or https://)');
+        }
+
+        if (missing.length) {
+          errors.textContent = 'Missing/invalid required fields:\n- ' + missing.join('\n- ');
+          show(errors);
+          return;
+        }
+
+        // Prototype "submission" summary
+        const payload = {
+          requested_for: form.requested_for.value,
+          website: form.website.value,
+          request_type: form.request_type.options[form.request_type.selectedIndex].text,
+          other_specify: form.other_specify.value,
+          source_url: form.source_url.value,
+          target_url: form.target_url.value,
+          site_owner: form.site_owner.value,
+          confirm_site_owner: form.confirm_site_owner.checked,
+          is_outage: form.is_outage.value,
+          priority: form.priority.value,
+          description: form.description.value,
+          date_change: form.date_change.value,
+          effective_time: form.effective_time.value,
+          more_info: form.more_info.value,
+          attachments_count: (form.attachments.files || []).length
+        };
+
+        ok.textContent = 'Prototype submit OK. Payload:\n' + JSON.stringify(payload, null, 2);
+        show(ok);
+      });
+
+      // Initial state
+      applyRules();
+    })();
+  </script>
 </body>
 </html>
